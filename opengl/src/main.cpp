@@ -2,9 +2,9 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-//#include <glm/glm.hpp>
-//#include <glm/gtc/matrix_transform.hpp>
-//#include <glm/gtc/type_ptr.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <fstream>
 #include <sstream>
@@ -152,14 +152,14 @@ int main() {
 	//};
 
 	float vertices[] = {
-		//first triangle
-		-0.5f, -0.5f, 0.0f,
-		-0.25f, 0.5f, 0.0f,
-		-0.1f, -0.5f, 0.0f,
+		//first triangle		//colours
+		-0.5f,  -0.5f, 0.0f,	1.0f, 0.0f, 0.0f,
+		-0.25f,  0.5f, 0.0f,	0.0f, 1.0f, 0.0f,
+		-0.1f,  -0.5f, 0.0f,	0.0f, 0.0f, 1.0f,
 		//second triangle
-		0.5f, -0.5f, 0.0f,
-		0.25f, 0.5f, 0.0f,
-		0.1f, -0.5f, 0.0f
+		0.5f,   -0.5f, 0.0f,	1.0f, 0.0f, 0.0f,
+		0.25f,   0.5f, 0.0f,	0.0f, 1.0f, 0.0f,
+		0.1f,   -0.5f, 0.0f,	0.0f, 0.0f, 1.0f
 	};
 	unsigned int indices[] = {
 		0, 1, 2, // first triangle
@@ -180,12 +180,21 @@ int main() {
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	// set vertex attribute pointers
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	//position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+	//color attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 	//set EBO
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	glm::mat4 trans = glm::mat4(1.0f);
+	trans = glm::rotate(trans, glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	glUseProgram(shaderPrograms[0]);
+	glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "transform"), 1, GL_FALSE, glm::value_ptr(trans));
 
 	while(!glfwWindowShouldClose(window)) {
 		processInput(window);
@@ -193,16 +202,19 @@ int main() {
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		trans = glm::rotate(trans, glm::radians((float)glfwGetTime() / 50.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "transform"), 1, GL_FALSE, glm::value_ptr(trans));
+
 		// draw shapes
 		glBindVertexArray(VAO);
 
 		//first triangle
 		glUseProgram(shaderPrograms[0]);
-		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		//second triangle
-		glUseProgram(shaderPrograms[1]);
-		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(3 * sizeof(unsigned int)));
+		//glUseProgram(shaderPrograms[1]);
+		//glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(3 * sizeof(unsigned int)));
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
